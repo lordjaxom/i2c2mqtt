@@ -1,0 +1,15 @@
+[Unit]
+Description=I2C to MQTT
+After=network.target
+
+[Service]
+Type=simple
+User=openhab
+Group=openhab
+WorkingDirectory=/opt/i2c2mqtt/daemon
+ExecStart=/opt/i2c2mqtt/daemon/daemon.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
