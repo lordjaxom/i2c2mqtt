@@ -1,10 +1,9 @@
-#!/opt/i2c2mqtt/bin/python
+#!/opt/i2c2mqtt/python/bin/python
 
+import logging
 from contextlib import contextmanager
 from itertools import chain
-import logging
 from sys import stdout
-
 from time import sleep
 from mcp23017 import MCP23017, GPPUA, GPPUB
 from paho.mqtt.client import Client as MqttClient
@@ -35,8 +34,7 @@ def connect_mcp23017(addr, smbus):
     return mcp
 
 
-def on_connect(client: MqttClient, userdata, flags, rc):
-    log.info("on_connect called")
+def on_mqtt_connect(client: MqttClient, userdata, flags, rc):
     if rc == 0 and client.is_connected():
         log.info("Connected to MQTT broker")
         client.publish(mqtt_will_topic, "Online", retain=True)
@@ -44,7 +42,7 @@ def on_connect(client: MqttClient, userdata, flags, rc):
         log.error("Failed to connect, return code %d", rc)
 
 
-def on_disconnect(client: MqttClient, userdata, rc):
+def on_mqtt_disconnect(client: MqttClient, userdata, rc):
     log.error("Disconnected with result code: %s", rc)
     reconnect_count, reconnect_delay = 0, FIRST_RECONNECT_DELAY
     while reconnect_count < MAX_RECONNECT_COUNT:
@@ -69,8 +67,8 @@ def on_disconnect(client: MqttClient, userdata, rc):
 def connect_mqtt():
     log.info("Connecting to MQTT broker %s:%d", mqtt_broker, mqtt_port)
     client = MqttClient(mqtt_client_id)
-    client.on_connect = on_connect
-    client.on_disconnect = on_disconnect
+    client.on_connect = on_mqtt_connect
+    client.on_disconnect = on_mqtt_disconnect
     client.will_set(mqtt_will_topic, "Offline", retain=True)
     client.connect(mqtt_broker, mqtt_port)
     client.loop_start()
